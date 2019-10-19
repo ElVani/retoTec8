@@ -1,9 +1,9 @@
-/* 
+/*
  * GRAFICACION - UNIDAD 2
  * RETO DE INTERACCION CON FIGURAS GEOMETRICAS
  * FUNCIONES DE EVENTOS DEL TECLADO
  * FUNCIONES DE EVENTOS DEL RATON
- * INTEGRANTES: 
+ * INTEGRANTES:
  * IVAN FRANCO DELGADO
  * JESUS EDUARDO SOSA DIAZ
  * JOSUE TORRES AVALOS
@@ -19,18 +19,20 @@
 #include <list>
 #include <iterator>
 
-// VALORES UTILIZADOS PARA EL TAMANO DE LA
-// PANTALLA DEFINIENDO ALTO Y ANCHO
+ // VALORES UTILIZADOS PARA EL TAMANO DE LA
+ // PANTALLA DEFINIENDO ALTO Y ANCHO
 #define HEIGHT 720
 #define WIDTH 1280
 
 // PROTOTIPOS DE FUNCIONES
+void GoMenu(int value);
 void initializer(void);
 void clearShape(float);
 void userInterface(void);
-void keyInput(unsigned char, int, int);
+//void keyInput(unsigned char, int, int);
 void specialKeyInput(int, int, int);
 void mouseControl(int, int, int, int);
+void showInstructions(void);
 
 static long font = (long)GLUT_BITMAP_TIMES_ROMAN_10; // CONTIENE EL VALOR DEL TIPO DE FUENTE
 bool used = false; // INDICA SI EL CANVAS HA SIDO UTILIZADO
@@ -47,9 +49,9 @@ std::list<Rectangle> rectangles;
 std::list<Square> squares;
 std::list<Circle> circles;
 std::string message = "Select a command"; // MENSAJE QUE SERA MOSTRADO SEGUN LA ACCION CORRESPONDIENTE
-int position[5] = { 0, 0, 0, 0, 0}; // AUXILIAR PARA LA SELECCION DE LOS ELEMENTOS DE LAS LISTAS
+int position[5] = { 0, 0, 0, 0, 0 }; // AUXILIAR PARA LA SELECCION DE LOS ELEMENTOS DE LAS LISTAS
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
@@ -58,9 +60,28 @@ int main(int argc, char *argv[]) {
 	glutCreateWindow("PainTec");
 
 	initializer(); // INICIALIZA LA VENTANA
-
+	
 	glutDisplayFunc(userInterface); // ACTUALIZA LA PANTALLA DE TRAZADO
-	glutKeyboardFunc(keyInput); // CAPTURA LAS TECLAS PERTENECIENTES AL ASCII
+
+	int sub1 = glutCreateMenu(GoMenu); // INICIALIZA UNA VARIABLE CREANDO UN MENU PARA QUE LAS OPCIONES DE LAS FIGURAS QUEDEN DENTRO DE UNA CATEGORIA
+
+	glutAddMenuEntry("Line", 1); // CREA OPCION PARA DIBUJAR UNA LINEA
+	glutAddMenuEntry("Rectangle", 2); // CREA OPCION PARA DIBUJAR UN RECTANGULO
+	glutAddMenuEntry("Square", 3); // CREA OPCION PARA DIBUJAR UN CUADRADO
+	glutAddMenuEntry("Circle", 4); // CREA OPCION PARA DIBUJAR UN CIRCULO
+
+	glutCreateMenu(GoMenu); // CREA UN MENU UTILIZANDO LA FUNCION GO MENU
+
+	glutAddMenuEntry("Instructions", 5); // CREA OPCION PARA MOSTRAR INSTRUCCIONES
+
+	glutAddSubMenu("Shapes", sub1); // CREA UNA CATEGORIA QUE UTILIZA EL VALOR DE SUB1 COMO PARAMETRO PARA QUE DE ESTA OPCION SE DESPLIEGUEN LAS OPCIONES
+
+	glutAddMenuEntry("Clear", 6); // CREA OPCION CLEAR QUE FUNCIONA PARA REESTABLECER LOS VALORES DE LA VENTANA
+
+	glutAddMenuEntry("Exit", 7); // CREA OPCION EXIT PARA SALIR DEL PROGRAMA
+
+	glutAttachMenu(GLUT_RIGHT_BUTTON); // SE ADJUNTA EL MENU AL BOTON DERECHO DEL MOUSE
+
 	glutSpecialFunc(specialKeyInput); // CAPTURA LAS TECLAS ESPECIALES COMO LAS FLECHAS
 	glutMouseFunc(mouseControl); // CAPTURA LOS CLICS
 
@@ -69,56 +90,75 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-/* 
+/*
  * FUNCION QUE TOMA EL VALOR DE LA FUENTE Y UNA CADENA COMO PARAMETRO
  * RECORRE LA CADENA CARACTER POR CARACTER HASTA QUE LLEGA AL PUNTO FINAL
  * IMPRIME EL CARACTER UTILIZANDO EL FONT
  */
-void writeBitmapString(void *font, const char *string)
+void writeBitmapString(void* font, const char* string)
 {
-	const char *c;
+	const char* c;
 	for (c = string; *c != '\0'; c++) glutBitmapCharacter(font, *c);
 }
+/*
+* FUNCION PARA MOSTRAR LAS INSTRUCCIONES
+*/
+void showInstructions(void) {
+	glRasterPos2f(10, 650);
+	writeBitmapString((void*)font, "To draw a shape put two points with mouse left button");
+	glRasterPos2f(10, 620);
+	writeBitmapString((void*)font, "Line: point of beginning and point of end");
+	glRasterPos2f(10, 590);
+	writeBitmapString((void*)font, "Rectangle: Corner up/left and corner down/right");
+	glRasterPos2f(10, 560);
+	writeBitmapString((void*)font, "Square and Circle: Center and side");
+	glRasterPos2f(10, 530);
+	writeBitmapString((void*)font, "To resize shapes select one shape and press UP or DOWN to resize, to change of shape press LEFT or RIGHT");
+	glRasterPos2f(10, 500);
+	writeBitmapString((void*)font, "Select clear to start drawing");
+	glFlush();
+}
+/*
+* FUNCION PARA BORRAR LAS INSTRUCCIONES
+*/
+void clearInstructions() {
+	glColor3f(1.0, 1.0, 1.0);
+	glutDisplayFunc(showInstructions);
+	glutDisplayFunc(userInterface); // LLAMA DE NUEVO A LA FUNCION USER INTERFACE PARA QUE PERMITA SEGUIR DIBUJANDO
+}
+/*
+* FUNCION QUE DETERMINA LAS ACCIONES DEL MENU ADJUNTO AL CLICK DERECHO DEL RATON
+*/
 
-/* 
- * FUNCION QUE CAPTURA LA TECLA PRESIONADA Y ENTRA EN UN
- * SWITCH PARA EJECUTAR EL CODIGO CORRESPONDIENTE AL VALOR
- * DE LA TECLA PRESIONADA EN CODIGO ASCII
- */
-void keyInput(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
-	case 27: // TECLA ESC
-		exit(0); // SALE INMEDIATAMENTE DEL PROGRAMA
-	case 108: // TECLA L CORRESPONDIENTE A LINE
+void GoMenu(int value) {
+	switch (value) {
+	case 1: // COMANDO CORRESPONDIENTE A LA LINEA
 		message = "Command active: Line";
 		active = true;
 		draw = 1;
-		glutPostRedisplay();
 		break;
-	case 114: // TECLA R CORRESPONDIENTE A RECTANGLE
+	case 2: // COMANDO CORRESPONDIENTE AL RECTANGULO
 		message = "Command active: Rectangle";
 		active = true;
 		draw = 2;
-		glutPostRedisplay();
 		break;
-	case 115: // TECLA S CORRESPONDIENTE A SQUARE
+	case 3: // COMANDO CORRESPONDIENTE AL CUADRADO
 		message = "Command active: Square";
 		active = true;
 		draw = 3;
-		glutPostRedisplay();
 		break;
-	case 99: // TECLA C CORRESPONDIENTE A CIRCLE
 		message = "Command active: Circle";
+	case 4: // COMANDO CORRESPONDIENTE AL CIRCULO
 		active = true;
 		draw = 4;
+		break;
+	case 5: // SHOW THE INSTRUCTIONS
+		glColor3f(0.0, 0.0, 0.0);
+		glutDisplayFunc(showInstructions);
 		glutPostRedisplay();
 		break;
-	case 100: // TECLA D CORRESPONDIENTE A DEFAULT
-		  // REESTABLECE LOS VALORES A SU VALOR INICIAL
-		  // VACIA LAS LISTAS DE LAS FIGURAS
-		message = "Select a command";
+	case 6: // REESTABLECE LOS VALORES A SU VALOR INICIAL
+		   // VACIA LAS LISTAS DE LAS FIGURAS
 		active = false;
 		fillPoints = false;
 		draw = -1;
@@ -132,14 +172,18 @@ void keyInput(unsigned char key, int x, int y)
 		squares.clear();
 		circles.clear();
 		lines.clear();
+		clearInstructions();
 		glutPostRedisplay();
 		break;
-	default:
+		
+	case 7:
+		exit(0); // SALE INMEDIATAMENTE DEL PROGRAMA
 		break;
 	}
+	glutPostRedisplay();
 }
 
-/* 
+/*
  * FUNCION QUE CAPTURA LA TECLA ESPECIAL DEL TECLADO
  * Y ENTRA EN UNA SECUENCIA DE IF'S QUE DEPENDE
  * DE LA DIRECCION DE LA FLECHA PRESIONADA
@@ -148,7 +192,7 @@ void specialKeyInput(int key, int x, int y)
 {
 	// DEBE ESTAR ACTIVO UN COMANDO Y DEPENDIENDO DEL MISMO
 	// PERMITE ASIGNAR UN NUMERO DE POSICION PARA SER MODIFICADO
-	if (draw > 0) 
+	if (draw > 0)
 	{
 		if (key == GLUT_KEY_LEFT) // TECLA IZQUIERDA
 		{
@@ -167,28 +211,28 @@ void specialKeyInput(int key, int x, int y)
 			switch (draw)
 			{
 			case 1: {
-				if (position[draw] + 1 <= (int)lines.size())
+				if (position[draw] + 1 < (int)lines.size())
 				{
 					position[draw]++;
 				}
 				break;
 			}
 			case 2: {
-				if (position[draw] + 1 <= (int)rectangles.size())
+				if (position[draw] + 1 < (int)rectangles.size())
 				{
 					position[draw]++;
 				}
 				break;
 			}
 			case 3: {
-				if (position[draw] + 1 <= (int)squares.size())
+				if (position[draw] + 1 < (int)squares.size())
 				{
 					position[draw]++;
 				}
 				break;
 			}
 			case 4: {
-				if (position[draw] + 1 <= (int)circles.size())
+				if (position[draw] + 1 < (int)circles.size())
 				{
 					position[draw]++;
 				}
@@ -209,8 +253,8 @@ void specialKeyInput(int key, int x, int y)
 	glutPostRedisplay(); // MANDA ACTUALIZAR LA PANTALLA
 }
 
-/* 
- * FUNCION QUE CAPTURA LOS CLIC DEL RATON 
+/*
+ * FUNCION QUE CAPTURA LOS CLIC DEL RATON
  * DEPENDIENDO DEL BOTON PRESIONADO
  */
 void mouseControl(int button, int state, int x, int y)
@@ -224,11 +268,11 @@ void mouseControl(int button, int state, int x, int y)
 		{
 			clics++; // AUMENTA EL VALOR DE LA VARIABLE
 		}
-		
+
 		// EL MAXIMO VALOR ES DOS, UNA VEZ ALCANZADO ESTE VALOR
 		// ACTUALIZA LA PANTALLA PARA DIBUJAR LA FIGURA 
-		if (clics >= 2) 
-		{		
+		if (clics >= 2)
+		{
 			fillPoints = true;
 			used = true;
 			message = "Select a command";
@@ -237,7 +281,7 @@ void mouseControl(int button, int state, int x, int y)
 	}
 }
 
-/* 
+/*
  * INICIALIZA LA PANTALLA
  * ASIGNA EL COLOR BLANCO AL CANVAS
  * ESTABLECE EL TAMANO DE LA MANTA QUE CORRESPONDA AL TAMANO DE LA PANTALLA
@@ -248,7 +292,7 @@ void initializer(void) {
 	gluOrtho2D(0.0, WIDTH, 0.0, HEIGHT); // TAMANO DE MANTA
 }
 
-/* 
+/*
  * FUNCION DISENADA PARA AUMENTAR O REDUCIR EL TAMANO DE UNA FIGURA
  * GEOMETRICA, TOMA COMO PARAMETRO EL VALOR A REDUCIR O AUMENTAR
  * TOMA EL VALOR CORRESPONDIENTE A LA FIGURA A DIBUJAR
@@ -261,13 +305,13 @@ void clearShape(float distance) {
 
 		break;
 	}
-	/* 
-	 * SI LA LISTA DE OBJETOS TIENE AL MENOS UN ELEMENTO, ITERA SOBRE LA LISTA
-	 * HASTA LLEGAR AL OBJETO EN EL INDICE DE LA VARIABLE POSICION (AUMENTADA / 
-	 * REDUCIDA CON TECLA IZQ/DER) MEDIANTE UN APUNTADOR PERMITE ACCEDER A LOS 
-	 * SETS Y GETS DEL OBJETO ESTABLECIENDO LOS NUEVOS VALORES ACTUALIZANDO SUS 
-	 * VERTICES Y PINTANDO DE NUEVO LA PANTALLA PARA REFLEJAR CAMBIOS
-	 */
+			/*
+			 * SI LA LISTA DE OBJETOS TIENE AL MENOS UN ELEMENTO, ITERA SOBRE LA LISTA
+			 * HASTA LLEGAR AL OBJETO EN EL INDICE DE LA VARIABLE POSICION (AUMENTADA /
+			 * REDUCIDA CON TECLA IZQ/DER) MEDIANTE UN APUNTADOR PERMITE ACCEDER A LOS
+			 * SETS Y GETS DEL OBJETO ESTABLECIENDO LOS NUEVOS VALORES ACTUALIZANDO SUS
+			 * VERTICES Y PINTANDO DE NUEVO LA PANTALLA PARA REFLEJAR CAMBIOS
+			 */
 	case 2: {
 		if (rectangles.empty() == false)
 		{
@@ -304,74 +348,49 @@ void clearShape(float distance) {
 	default:
 		break;
 	}
-	
+
 }
 
-/* 
- * MUESTRA LAS INSTRUCCIONES DE LOS COMANDOS A DIBUJAR
- * HACIENDO USO DE LA FUNCION PARA PINTAR LAS CADENAS
- */
-void menuOptions(void) {
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(10, 680);
-	writeBitmapString((void*)font, "Press L to Draw a Line!");
-
-	glRasterPos2f(10, 660);
-	writeBitmapString((void*)font, "Press R to Draw a Rectangle!");
-
-	glRasterPos2f(10, 640);
-	writeBitmapString((void*)font, "Press S to Draw a Square!");
-
-	glRasterPos2f(10, 620);
-	writeBitmapString((void*)font, "Press C to Draw a Circle!");
-
-	glRasterPos2f(10, 600);
-	writeBitmapString((void*)font, "Press D to Default the Screen");
-
-	glRasterPos2f(500, 20);
-	writeBitmapString((void*)font, message.c_str());
-}
-
-/* 
+/*
  * INTERFAZ DE USUARIO O PANTALLA DONDE ES PINTADO TODO
  * CADA VEZ QUE ES LLAMADA, SE LIMPIA LA PANTALLA
  */
 void userInterface(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	menuOptions(); // MANDA LLAMAR LAS INSTRUCCIONES
-
+	glColor3f(0.0, 0.0, 0.0);
+	glRasterPos2f(570, 680);
+	writeBitmapString((void*)font, "Press mouse right button to show options");
 	// SI YA EXISTIA ALGO DIBUJADO, ITERA SOBRE CADA LISTA
 	// PARA VOLVER A PINTARLO MANTENIENDO ACTUALIZADO EL DIBUJO
 	if (used)
 	{
 		if (rectangles.empty() == false)
 		{
-			for (Rectangle &rec : rectangles) {
+			for (Rectangle& rec : rectangles) {
 				rec.drawShapeFill();
 			}
 		}
 		if (squares.empty() == false)
 		{
-			for (Square &sq : squares) {
+			for (Square& sq : squares) {
 				sq.drawShapeFill();
 			}
 		}
 		if (circles.empty() == false)
 		{
-			for (Circle &cir : circles) {
+			for (Circle& cir : circles) {
 				cir.drawShapeTrig();
 			}
 		}
 		if (lines.empty() == false)
 		{
-			for (Lines &li : lines) {
+			for (Lines& li : lines) {
 				li.drawLine();
 			}
 		}
 	}
-	
+
 	// SI EXISTE UN COMANDO ACTIVO Y LOS DOS VERTICES HAN SIDO CAPTURADOS 
 	// ENTONCES ENTRA EN UN SWITCH
 	// CALCULA LOS PUNTOS INICIAL Y FINAL MEDIANTE EL ARREGLO DE VERTICES
@@ -395,7 +414,7 @@ void userInterface(void)
 			break;
 		}
 		case 2: // DIBUJA UN RECTANGULO
-		{	
+		{
 			float x0 = points[0].getX(), x1 = points[1].getX();
 			float y0 = HEIGHT - points[0].getY(), y1 = HEIGHT - points[1].getY();
 			float base = x1 - x0;
@@ -453,7 +472,7 @@ void userInterface(void)
 		}
 		}
 	}
-	
+
 	// EN CASO DE TENER QUE AUMENTAR O REDUCIR EL TAMANO DE UNA FIGURA
 	// ENTRA EN ESTA SECCION Y MANDA LLAMAR EL METODO PARA TRANSFORMARLA
 	else

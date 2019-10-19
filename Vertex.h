@@ -1,12 +1,26 @@
+/* 
+ * GRAFICACION
+ * INTEGRANTES: 
+ * IVAN FRANCO DELGADO
+ * JESUS EDUARDO SOSA DIAZ
+ * JOSUE TORRES AVALOS
+ */
+
 #pragma once
 #include <cmath>
 const double PI = 3.14159265;
 
+/* 
+ * CLASE VERTEX QUE SIRVE PARA ALMACENAR LOS PUNTOS X E Y
+ */
 class Vertex {
+	
+	// ATRIBUTOS
 private:
 	float x;
 	float y;
 
+	// CONSTRUCTOR Y METODOS
 public:
 	
 	Vertex() {
@@ -35,18 +49,22 @@ public:
 		y = _y;
 	}
 
-	// Transformaciones
+	// TRANSFORMACIONES
 
+	// MOVER VERTICE, AGREGA LA CANTIDAD A TRASLADAR
 	void moveVertex(float _x, float _y) {
 		x = x + _x;
 		y = y + _y;
 	}
 
+	// ESCALAR VERTICE, MULTIPLICA POR LA CANTIDAD A ESCALAR
 	void scaleVertex(float _x, float _y) {
 		x = x * _x;
 		y = y * _y;
 	}
 
+	// ROTAR VERTICE, UTILIZA UN PUNTO PIVOTE Y MULTIPLICA EL X E Y POR
+	// UNA TRANSFORMACION LINEAL
 	void rotateVertex(float x_pivot, float y_pivot, float _theta) {
 		float temp_x = x, temp_y = y;
 		_theta = _theta * PI / 180;

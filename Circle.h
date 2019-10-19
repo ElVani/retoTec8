@@ -1,12 +1,25 @@
+/* 
+ * GRAFICACION 
+ * INTEGRANTES: 
+ * IVAN FRANCO DELGADO
+ * JESUS EDUARDO SOSA DIAZ
+ * JOSUE TORRES AVALOS
+ */
 #pragma once
 #include "Shapes.h"
 #define PI 3.1416
+
+/* 
+ * CLASE DE CIRCULO HEREDA DE CLASE SHAPES
+ */
 class Circle : public Shapes {
+	
+	// ATRIBUTOS
 private:
 	float radius;
 	float diameter;
-	//const double PI = 3.141592;
 
+	// CONSTRUCTORES Y METODOS
 public:
 	Circle() {
 		setOrigin(0, 0);
@@ -66,6 +79,7 @@ public:
 	double calculateArea() { return (PI * (pow(radius, 2))); }
 	double calculatePerimeter() { return (2 * PI * radius); }
 
+	// DIBUJA EL CIRCULO UTILIZANDO LA TECNICA DEL PUNTO MEDIO
 	void drawShape() {
 		Color aux_color = getColor();
 		glColor3f(aux_color.getR(), aux_color.getG(), aux_color.getB());
@@ -92,6 +106,7 @@ public:
 		}
 	}
 
+	// FUNCION QUE REALIZA EL TRAZADO DE LOS PUNTOS
 	void circlePlotPoints(int x, int y, Vertex aux_pos) {
 		glBegin(GL_POINTS);
 		glVertex2i(x + aux_pos.getX(), y + aux_pos.getY());
@@ -107,6 +122,7 @@ public:
 		glEnd();
 	}
 
+	// DIBUJA EL CIRCULO UTILIZANDO LA FORMA TRIGONOMETRICA
 	void drawShapeTrig() {
 		Color aux_color = getColor();
 		glColor3f(aux_color.getR(), aux_color.getG(), aux_color.getB());
@@ -122,15 +138,13 @@ public:
 		glEnd();
 	}
 
+	// FUNCION PARA MOVER EL CIRCULO
 	void moveShape(float _x, float _y) {
 		origin.moveVertex(_x, _y);
 	}
 
+	// FUNCION PARA ESCALAR EL CIRCULO
 	void scaleShape(float factor) {
 		setRadius(factor * getRadius());
 	}
-	/*
-	void rotateShape(float _x, float _y, double _theta) {
-		
-	}*/
 };

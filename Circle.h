@@ -54,7 +54,7 @@ public:
 
 	void setRadius(float rad) {
 		if (rad > 0) { radius = rad; }
-		else { radius = 50; }
+		else { radius = 2; }
 		diameter = getRadius() * 2;
 		area = calculateArea();
 		perimeter = calculatePerimeter();
@@ -116,7 +116,7 @@ public:
 		glBegin(GL_POLYGON);
 		for (int i = 0; i < circle_points; i++)
 		{
-			float angle = 2 * PI * float(i) / circle_points;
+			double angle = 2 * PI * float(i) / circle_points;
 			glVertex2f(aux_pos.getX() + getRadius() * cos(angle), aux_pos.getY() + getRadius() * sin(angle));
 		}
 		glEnd();

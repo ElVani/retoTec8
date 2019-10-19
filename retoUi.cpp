@@ -4,45 +4,56 @@
 #include "Circle.h"
 #include "Rectangle.h"
 #include "Square.h"
+#include "Lines.h"
 #include <string>
+#include <list>
+#include <iterator>
 
 #define HEIGHT 720
 #define WIDTH 1280
 
 void initializer(void);
-void lineSegment(void);
-void clearShape(int);
+void clearShape(float);
 void userInterface(void);
 void keyInput(unsigned char, int, int);
 void specialKeyInput(int, int, int);
 void mouseControl(int, int, int, int);
 
 static long font = (long)GLUT_BITMAP_TIMES_ROMAN_10;
+bool used = false;
 bool active = false;
 bool fillPoints = false;
 int draw = -1;
 int clics = 0;
 int resize = 0;
 Vertex points[2];
-Rectangle recGlobal;
-Square sqGlobal;
-Circle cirGlobal;
+std::list<Lines> lines;
+std::list<Rectangle> rectangles;
+std::list<Square> squares;
+std::list<Circle> circles;
+//Rectangle recGlobal;
+//Square sqGlobal;
+//Circle cirGlobal;
 std::string message = "Select a command";
-std::string message2;
+int position[5] = { 0,0,0,0 ,0};
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
+
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(WIDTH, HEIGHT); // Establece el tamao de la ventana
 	glutCreateWindow("PainTec");
+
 	initializer();
+
 	glutDisplayFunc(userInterface);
 	glutKeyboardFunc(keyInput);
 	glutSpecialFunc(specialKeyInput);
 	glutMouseFunc(mouseControl);
 
 	glutMainLoop(); // genera un loop para que continue
+
 	return 0;
 }
 
@@ -59,28 +70,44 @@ void keyInput(unsigned char key, int x, int y)
 	case 27: // esc key
 		exit(0);
 	case 108: // l which stands for line
-		message2 = message;
 		message = "Command active: Line";
 		active = true;
 		draw = 1;
+		glutPostRedisplay();
 		break;
 	case 114: // r which stands for rectangle
+		message = "Command active: Rectangle";
 		active = true;
 		draw = 2;
+		glutPostRedisplay();
 		break;
 	case 115: // s which stands for square
+		message = "Command active: Square";
 		active = true;
 		draw = 3;
+		glutPostRedisplay();
 		break;
 	case 99: // c which stands for circle
+		message = "Command active: Circle";
 		active = true;
 		draw = 4;
+		glutPostRedisplay();
 		break;
 	case 100: // d which stands for default
+		message = "Select a command";
 		active = false;
 		fillPoints = false;
 		draw = -1;
 		clics = 0;
+		used = false;
+		for (size_t i = 0; i < 5; i++)
+		{
+			position[i] = 0;
+		}
+		rectangles.clear();
+		squares.clear();
+		circles.clear();
+		lines.clear();
 		glutPostRedisplay();
 		break;
 	default:
@@ -90,9 +117,55 @@ void keyInput(unsigned char key, int x, int y)
 
 void specialKeyInput(int key, int x, int y)
 {
+	if (draw > 0)
+	{
+		if (key == GLUT_KEY_LEFT)
+		{
+			if (position[draw] - 1 >= 0)
+			{
+				position[draw]--;
+			}
+			return;
+		}
+		if (key == GLUT_KEY_RIGHT)
+		{
+			switch (draw)
+			{
+			case 1: {
+				if (position[draw] + 1 <= (int)lines.size())
+				{
+					position[draw]++;
+				}
+				break;
+			}
+			case 2: {
+				if (position[draw] + 1 <= (int)rectangles.size())
+				{
+					position[draw]++;
+				}
+				break;
+			}
+			case 3: {
+				if (position[draw] + 1 <= (int)squares.size())
+				{
+					position[draw]++;
+				}
+				break;
+			}
+			case 4: {
+				if (position[draw] + 1 <= (int)circles.size())
+				{
+					position[draw]++;
+				}
+				break;
+			}
+			}
+			return;
+		}
+	}
 	if (key == GLUT_KEY_UP)
 	{
-		resize = 1;
+		resize = 1;		
 	}
 	if (key == GLUT_KEY_DOWN)
 	{
@@ -114,6 +187,8 @@ void mouseControl(int button, int state, int x, int y)
 		if (clics >= 2)
 		{
 			fillPoints = true;
+			used = true;
+			message = "Select a command";
 			glutPostRedisplay();
 		}
 	}
@@ -125,16 +200,8 @@ void initializer(void) {
 	gluOrtho2D(0.0, WIDTH, 0.0, HEIGHT); // especificamos que la imagen ser en 2D
 }
 
-void lineSegment(void) {
-	glColor3f(1.0, 0.0, 0.0); // el color rgb de la linea a dibujar
-	glBegin(GL_LINES);
-	glVertex2f(points[0].getX(), HEIGHT - points[0].getY()); // coordenadas de las lineas
-	glVertex2f(points[1].getX(), HEIGHT - points[1].getY());
-	glEnd();
-	glFlush(); // hace que se muestre en la pantalla
-}
 
-void clearShape(int distance) {
+void clearShape(float distance) {
 	switch (draw)
 	{
 	case 1: {
@@ -142,26 +209,36 @@ void clearShape(int distance) {
 		break;
 	}
 	case 2: {
-		Rectangle rec = recGlobal;
-		rec.setColor(1.0, 1.0, 1.0);
-		rec.drawShapeFill();
-		recGlobal.setBase(recGlobal.getBase() + distance);
-		recGlobal.setHeight(recGlobal.getHeight() + distance);
-		recGlobal.calculateVertex();
-		recGlobal.drawShapeFill();
+		if (rectangles.empty() == false)
+		{
+			std::list<Rectangle>::iterator it = rectangles.begin();
+			std::advance(it, position[draw]);
+			(*it).setBase((*it).getBase() + distance);
+			(*it).setHeight((*it).getHeight() + distance);
+			(*it).calculateVertex();
+			glutPostRedisplay();
+		}
 		break;
 	}
 	case 3: {
-		Square sq = sqGlobal;
-		sq.setColor(1.0, 1.0, 1.0);
-		sq.drawShapeFill();
-		sqGlobal.setSide(sqGlobal.getSide() + distance);
-		sqGlobal.calculateVertex();
-		sqGlobal.drawShapeFill();
+		if (squares.empty() == false)
+		{
+			std::list<Square>::iterator it = squares.begin();
+			std::advance(it, position[draw]);
+			(*it).setSide((*it).getSide() + distance);
+			(*it).calculateVertex();
+			glutPostRedisplay();
+		}
 		break;
 	}
 	case 4: {
-
+		if (circles.empty() == false)
+		{
+			std::list<Circle>::iterator it = circles.begin();
+			std::advance(it, position[draw]);
+			(*it).setRadius((*it).getRadius() + distance);
+			glutPostRedisplay();
+		}
 		break;
 	}
 	default:
@@ -175,68 +252,88 @@ void menuOptions(void) {
 	glRasterPos2f(10, 680);
 	writeBitmapString((void*)font, "Press L to Draw a Line!");
 
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(10, 650);
+	glRasterPos2f(10, 660);
 	writeBitmapString((void*)font, "Press R to Draw a Rectangle!");
 
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(10, 620);
+	glRasterPos2f(10, 640);
 	writeBitmapString((void*)font, "Press S to Draw a Square!");
 
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(10, 590);
+	glRasterPos2f(10, 620);
 	writeBitmapString((void*)font, "Press C to Draw a Circle!");
 
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(10, 560);
-	writeBitmapString((void*)font, "Press D to Default");
+	glRasterPos2f(10, 600);
+	writeBitmapString((void*)font, "Press D to Default the Screen");
 
-	glColor3f(1.0, 1.0, 1.0);
-	glRasterPos2f(0, 20);
+	glRasterPos2f(500, 20);
 	writeBitmapString((void*)font, message.c_str());
-
-	glColor3f(0.0, 0.0, 0.0);
-	glRasterPos2f(0, 20);
-	writeBitmapString((void*)font, message2.c_str());
 }
 
 void userInterface(void)
 {
-	if (draw <= 0)
-	{
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	menuOptions();
 
+	if (used)
+	{
+		if (rectangles.empty() == false)
+		{
+			for (Rectangle &rec : rectangles) {
+				rec.drawShapeFill();
+			}
+		}
+		if (squares.empty() == false)
+		{
+			for (Square &sq : squares) {
+				sq.drawShapeFill();
+			}
+		}
+		if (circles.empty() == false)
+		{
+			for (Circle &cir : circles) {
+				cir.drawShapeTrig();
+			}
+		}
+		if (lines.empty() == false)
+		{
+			for (Lines &li : lines) {
+				li.drawLine();
+			}
+		}
+	}
 	if (active && fillPoints)
 	{
 		switch (draw)
 		{
 		case 1:
-			lineSegment();
+		{
+			Vertex a(points[0].getX(), HEIGHT - points[0].getY()); // coordenadas de las lineas
+			Vertex b(points[1].getX(), HEIGHT - points[1].getY());
+			Lines line(a, b, 0.0, 0.0, 1.0);
+			lines.push_back(line);
+			line.drawLine();
 			message = "Select a command";
 			active = false;
 			fillPoints = false;
 			clics = 0;
+			draw = 0;
 			break;
+		}
 		case 2:
 		{	
-			
 			float x0 = points[0].getX(), x1 = points[1].getX();
 			float y0 = HEIGHT - points[0].getY(), y1 = HEIGHT - points[1].getY();
 			float base = x1 - x0;
 			float height = y1 - y0;
-			
 			float xOrigin = x0 + (base / 2);
 			float yOrigin = y0 + (height / 2);
 			Rectangle rec(xOrigin, yOrigin, base, height, 0.0, 1.0, 0.0);
-			recGlobal = rec;
+			rectangles.push_back(rec);
 			rec.drawShapeFill();
-
 			active = false;
 			fillPoints = false;
 			clics = 0;
+			draw = 0;
 			break;
 		}
 		case 3:
@@ -251,13 +348,12 @@ void userInterface(void)
 			float xOrigin = x0;
 			float yOrigin = y0;
 			Square sq(xOrigin, yOrigin, side, 0.0, 1.0, 0.0);
-			sqGlobal = sq;
+			squares.push_back(sq);
 			sq.drawShapeFill();
-
 			active = false;
 			fillPoints = false;
 			clics = 0;
-
+			draw = 0;
 			break;
 		}
 		case 4:
@@ -272,12 +368,12 @@ void userInterface(void)
 			float xOrigin = x0;
 			float yOrigin = y0;
 			Circle cir(xOrigin, yOrigin, radius, 0.0, 1.0, 0.0);
-			cirGlobal = cir;
+			circles.push_back(cir);
 			cir.drawShapeTrig();
 			active = false;
 			fillPoints = false;
 			clics = 0;
-
+			draw = 0;
 			break;
 		}
 		}
